@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  ubuntu:
+    container_name: mikanos-ubuntu
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    tty: true
+    volumes:
+      - type: bind
+        source: ./MikanLoaderPkg
+        target: /root/edk2/MikanLoaderPkg
+      - type: bind
+        source: ./setting
+        target: /root/edk2/original_setting
+      - type: bind
+        source: ./build
+        target: /root/edk2/output
+    working_dir: /root/edk2/
+    command: bash original_setting/setup.sh
