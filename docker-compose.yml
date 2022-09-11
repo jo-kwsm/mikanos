@@ -12,6 +12,9 @@ services:
         source: ./MikanLoaderPkg
         target: /root/edk2/MikanLoaderPkg
       - type: bind
+        source: ./kernel
+        target: /root/kernel
+      - type: bind
         source: ./setting
         target: /root/edk2/original_setting
       - type: bind
