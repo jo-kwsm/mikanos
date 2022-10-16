@@ -6,70 +6,45 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cstdio>
 
+// #@@range_begin(includes)
 #include "frame_buffer_config.hpp"
+#include "graphics.hpp"
+#include "font.hpp"
+#include "console.hpp"
+// #@@range_end(includes)
 
-struct PixelColor {
-  uint8_t r, g, b;
-};
-
-// #@@range_begin(pixel_writer)
-class PixelWriter {
- public:
-  PixelWriter(const FrameBufferConfig& config) : config_{config} {
-  }
-  virtual ~PixelWriter() = default;
-  virtual void Write(int x, int y, const PixelColor& c) = 0;
-
- protected:
-  uint8_t* PixelAt(int x, int y) {
-    return config_.frame_buffer + 4 * (config_.pixels_per_scan_line * y + x);
-  }
-
- private:
-  const FrameBufferConfig& config_;
-};
-// #@@range_end(pixel_writer)
-
-// #@@range_begin(derived_pixel_writer)
-class RGBResv8BitPerColorPixelWriter : public PixelWriter {
- public:
-  using PixelWriter::PixelWriter;
-
-  virtual void Write(int x, int y, const PixelColor& c) override {
-    auto p = PixelAt(x, y);
-    p[0] = c.r;
-    p[1] = c.g;
-    p[2] = c.b;
-  }
-};
-
-class BGRResv8BitPerColorPixelWriter : public PixelWriter {
- public:
-  using PixelWriter::PixelWriter;
-
-  virtual void Write(int x, int y, const PixelColor& c) override {
-    auto p = PixelAt(x, y);
-    p[0] = c.b;
-    p[1] = c.g;
-    p[2] = c.r;
-  }
-};
-// #@@range_end(derived_pixel_writer)
-
-// #@@range_begin(placement_new)
 void* operator new(size_t size, void* buf) {
   return buf;
 }
 
 void operator delete(void* obj) noexcept {
 }
-// #@@range_end(placement_new)
 
 char pixel_writer_buf[sizeof(RGBResv8BitPerColorPixelWriter)];
 PixelWriter* pixel_writer;
 
-// #@@range_begin(call_pixel_writer)
+// #@@range_begin(console_buf)
+char console_buf[sizeof(Console)];
+Console* console;
+// #@@range_end(console_buf)
+
+// #@@range_begin(printk)
+int printk(const char* format, ...) {
+  va_list ap;
+  int result;
+  char s[1024];
+
+  va_start(ap, format);
+  result = vsprintf(s, format, ap);
+  va_end(ap);
+
+  console->PutString(s);
+  return result;
+}
+// #@@range_end(printk)
+
 extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   switch (frame_buffer_config.pixel_format) {
     case kPixelRGBResv8BitPerColor:
@@ -87,11 +62,15 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
       pixel_writer->Write(x, y, {255, 255, 255});
     }
   }
-  for (int x = 0; x < 200; ++x) {
-    for (int y = 0; y < 100; ++y) {
-      pixel_writer->Write(x, y, {0, 255, 0});
-    }
+
+  // #@@range_begin(new_console)
+  console = new(console_buf) Console{*pixel_writer, {0, 0, 0}, {255, 255, 255}};
+  // #@@range_end(new_console)
+
+  // #@@range_begin(use_printk)
+  for (int i = 0; i < 27; ++i) {
+    printk("printk: %d\n", i);
   }
+  // #@@range_end(use_printk)
   while (1) __asm__("hlt");
 }
-// #@@range_end(call_pixel_writer)

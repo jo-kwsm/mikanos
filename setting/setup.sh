@@ -1,8 +1,8 @@
 source edksetup.sh
 source $HOME/osbook/devenv/buildenv.sh
 cp ./original_setting/target.txt ./Conf/target.txt
-cp ./elf.hpp ./MikanLoaderPkg
-cp ./frame_buffer_config.hpp ./MikanLoaderPkg
+cp /root/kernel/elf.hpp ./MikanLoaderPkg
+cp /root/kernel/frame_buffer_config.hpp ./MikanLoaderPkg
 build
 rm ./MikanLoaderPkg/elf.hpp
 rm ./MikanLoaderPkg/frame_buffer_config.hpp

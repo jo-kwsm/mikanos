@@ -20,5 +20,8 @@ services:
       - type: bind
         source: ./build
         target: /root/edk2/output
+      - type: bind
+        source: ./tools
+        target: /root/tools
     working_dir: /root/edk2/
     command: bash original_setting/setup.sh
